@@ -1,33 +1,23 @@
 'use client'
 
 import Header from "@/app/(Components)/header/Header";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import jsPDF from "jspdf";
+import Link from "next/link";
+import axios from "axios";
 
 const Karshenas2 =  () => {
     const param = useSearchParams();
-    const doc = new jsPDF({
-        orientation : 'landscape',
-        unit : 'mm',
-        format : 'a5'
-    })
-    doc.setFontSize(14);
-    console.log('fonts : ',doc.getFontList());
-    doc.addFont("BNazanin.ttf", "BNazanin", "normal");
-    doc.setFont("BNazanin");
     const [malek , setmalek] = useState("");
-    const [karshenas , setkarshenas] = useState("");
+    const [karshenas , setkarshenas] = useState("شروین نیا");
     const [hazine , sethazine] = useState("");
-    const [mahal , setmahal] = useState("");
+    const [mahal , setmahal] = useState("در مرکز");
     const [phoneNumber , setphoneNeumber] = useState("");
-    const [moarefName , setmoarefName] = useState("");
     const [moarefSelect , setmoarefSelect] = useState("مراجعه حضوری");
     const [nameMachine , setnameMachine] = useState("");
     const [model , setmodel] = useState("");
     const [shasi , setshasi] = useState("");
-    const [pelak1 , setpelak1] = useState("");
+    const [pelak , setpelak1] = useState("");
     const [pelak2 , setpelak2] = useState("");
     const [pelak3 , setpelak3] = useState("");
     const [pelak4 , setpelak4] = useState("");
@@ -39,9 +29,8 @@ const Karshenas2 =  () => {
         sethazine(param.get('hazine'));
         setmahal(param.get('mahal'));
         setmalek(param.get('name'));
-        setphoneNeumber(param.get('phoneNumber'));
-        setmoarefName(param.get('moarefName'));
-        setmoarefSelect(param.get('moarefSelect'));
+        setphoneNeumber(param.get('phone'));
+        setmoarefSelect(param.get('moarefselect'));
         setnameMachine(param.get('nameMachine'));
         setmodel(param.get('model'));
         setshasi(param.get('shasi'));
@@ -66,9 +55,20 @@ const Karshenas2 =  () => {
         settext(newEditText);
         console.log(text);
     }
-    const chapbarge = () => {
-        doc.text("سام زینلی" , 30, 40);
-        doc.save('file.pdf')
+    const addData = async() => {
+        if (text == "") {
+            alert("شما هنوز توضیحاتی وارد نکرده اید")
+        } else {
+            const data = {karshenas , mahal , malek , phoneNumber , moarefSelect , nameMachine , shasi , pelak , pelak2 , pelak3 , pelak4 , hazine , text , textkarshenas};
+            try {
+              const res = await axios.post('http://localhost:8080/cars' , data );
+              alert(textkarshenas)
+              alert("با موفقیت ذخیره شد");
+              console.log(res);
+            } catch (error) {
+                console.log(error);
+            }
+        }
     }
     return (
         <div className="flex min-h-screen flex-col items-center p-24">
@@ -160,12 +160,14 @@ const Karshenas2 =  () => {
                 <div className="w-[34%] flex flex-col bg-orange-50 border border-zinc-400 rounded-2xl p-5">
                     <textarea className="w-full h-[45%] border border-zinc-900 rounded-lg p-3" value={text} onChange={addTextDasti} placeholder="توضیحات"></textarea>
                     <textarea className="w-full mt-[10px] h-[35%] border border-zinc-900 rounded-lg p-3" value={textkarshenas} onChange={addTextKarshenas} placeholder="توضیحات ویژه کارشناس"></textarea>
-                    <div className="w-[100%] text-center cursor-pointer hover:bg-orange-300 transition bg-orange-100 p-[10px] mt-[20px] border border-zinc-700 rounded-xl">
-                        ثبت و ادامه
+                    <div onClick={addData} className="w-[100%] text-center cursor-pointer hover:bg-orange-300 transition bg-orange-100 p-[10px] mt-[20px] border border-zinc-700 rounded-xl">
+                        ثبت خودرو
                     </div>
-                    <div onClick={chapbarge} className={"w-[100%] text-center cursor-pointer hover:bg-orange-300 transition bg-orange-100 p-[10px] mt-[20px] border border-zinc-700 rounded-xl"}>
-                        چاپ برگه کارشناسی
-                    </div>
+                    <Link rel="noopener noreferrer" target="_blank" href={"/karshenasi/barge?name="+malek+"&phone="+phoneNumber+"&karshenas="+karshenas+"&moarefselect="+moarefSelect+"&nameMachine="+nameMachine+"&model="+model+"&shasi="+shasi+"&pelak1="+pelak+"&pelak2="+pelak2+"&pelak3="+pelak3+"&pelak4="+pelak4+"&color="+color+"&text="+text}>
+                        <div className={"w-[100%] text-center cursor-pointer hover:bg-orange-300 transition bg-orange-100 p-[10px] mt-[20px] border border-zinc-700 rounded-xl"}>
+                            چاپ برگه کارشناسی
+                        </div>
+                    </Link>
                 </div>
             </div>
         </div>

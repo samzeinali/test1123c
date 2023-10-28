@@ -1,14 +1,21 @@
 'use client'
 
 import Header from "@/app/(Components)/header/Header";
+import axios from "axios";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const Karshenas1 = () => {
     const [malek , setmalek] = useState("");
-    const [name , setname] = useState("");
-    const [mahal , setmahal] = useState("");
+    const [finalCarName , setfinalCarName] = useState([]);
+    const [searchValue , setsearchValue] = useState("");
+    const [searchresBox , setsearchresBox] = useState("hidden");
+    const [carsname , setcarsname] = useState([]);
+    const [searchcar , setsearchcar] = useState("hidden");
+    const [carerr , setcarerr] = useState({malek : "",text:"",textKarshenas:"",karshenasName:""});
+    const [errbox , seterrbox] = useState("hidden")
+    const [lastcars , setlastcars] = useState([]);
+    const [mahal , setmahal] = useState("در مرکز");
     const [phoneNumber , setphoneNeumber] = useState("");
     const [karshenas , setkarshenas] = useState("شروین نیا");
     const [moarefSelect , setmoarefSelect] = useState("مراجعه حضوری");
@@ -21,14 +28,18 @@ const Karshenas1 = () => {
     const [pelak4 , setpelak4] = useState("");
     const [color , setcolor] = useState("");
     const [hanzine , sethazine] = useState('');
-    const param = useSearchParams();
+    const [errshow , seterrshow] = useState('hidden');
     useEffect(() => {
-        const namekar =  param.get('name');
-        const mahalkar = param.get('mahal');
-        setname(namekar);
-        setmahal(mahalkar);
-    });
-
+        const fetchAllCars = async () => {
+            const res = await axios.get('http://localhost:8080/cars');
+            const nameRes = await axios.get('http://localhost:8080/carname');
+            const finalicars = res.data;
+            const carNames = nameRes.data;
+            setcarsname(carNames);
+            setlastcars(finalicars);
+        }
+        fetchAllCars();
+    },[1]);
     const changemalek = (event) => {
         setmalek(event.target.value);
     }
@@ -49,6 +60,17 @@ const Karshenas1 = () => {
     }
     const changeshasi = (event) => {
         setshasi(event.target.value);
+        const newvalue = event.target.value;
+        lastcars.forEach((item , index)=>{
+            const shasinew = item.shasi;
+            if (shasinew == newvalue) {
+                seterrbox("flex");
+                const errcar = lastcars[index];
+                setcarerr(errcar);
+                seterrshow('flex');
+            }
+            console.log("shasi is : " , shasinew);
+        })
     }
     const changepelak1 = (event) => {
         setpelak1(event.target.value);
@@ -78,6 +100,36 @@ const Karshenas1 = () => {
     }
     const changemahal = (event) => {
         setmahal(event.target.value)
+    }
+    const openSearchBox = (event) => {
+        setsearchcar("flex");
+    }
+    const searchHandler = (event) => {
+        const newValue = event.target.value;
+        setsearchValue(newValue);
+        if (newValue.length > 2) {
+            console.log(carsname[1]);
+            let newcars = [];
+            for (let index = 0; index < carsname.length; index++) {
+                let car = carsname[index].name;
+                newcars.push(car)
+            }
+            const lastcar =  newcars.filter((value , index)=>{
+                return value.includes(newValue)
+            })
+            setfinalCarName(lastcar);
+            setsearchresBox("flex")
+        } else {
+            setsearchresBox("hidden")
+        }
+    }
+    const closeSearchBox = () => {
+        setsearchcar("hidden")
+    }
+    const carselect = (event) =>{
+        const carName = event.target.innerText;
+        setnameMachine(carName);
+        setsearchcar("hidden");
     }
     return (
         <div className="flex min-h-screen flex-col items-center p-24">
@@ -133,15 +185,19 @@ const Karshenas1 = () => {
                 <div className="w-[48%] flex flex-col bg-orange-50 border border-zinc-400 rounded-2xl p-5">
                     <h2 className="w-full text-center text-[20px]">مشخصات خودرو</h2>
                     <label className="mt-[10px]">نام خودرو : </label>
-                    <input value={nameMachine} onChange={changenameMachine} placeholder="نام خودرو" className="w-[100%] bg-orange-100 p-[10px] mt-[10px] border border-zinc-700 rounded-xl"/>
+                    <div className="w-full flex pt-[15px]">
+                        <input value={nameMachine} onChange={changenameMachine} placeholder="نام خودرو" className="w-[90%] bg-orange-100 p-[10px] mt-[10px] border border-zinc-700 rounded-xl"/>
+                        <div onClick={openSearchBox} className="flex w-[8%] cursor-pointer justify-center items-center text-[19px] rounded-lg">?</div>
+                    </div>
                     <div className="flex mt-[10px] justify-between items-center">
                         <div className="w-[35%]">
                             <label>مدل : </label>
                             <input value={model} onChange={changemodel} placeholder="سال تولید" className="w-[75%] bg-orange-100 p-[10px] mt-[10px] border border-zinc-700 rounded-xl" />
                         </div>
-                        <div className="w-[55%] flex items-center justify-between">
+                        <div className="w-[65%] flex items-center justify-between">
                             <label>شماره شاسی : </label>
                             <input onChange={changeshasi} value={shasi} placeholder="شماره 6 رقمی" className="w-[65%] bg-orange-100 p-[10px] mt-[10px] border border-zinc-700 rounded-xl"/>
+                            <Link rel="noopener noreferrer" target="_blank" href={"/karshenasi/errpage?name="+ carerr.malek +"&karshenas="+carerr.karshenasName+"&text="+carerr.text+"&textkarshenas="+carerr.textKarshenas} className={errshow}><div className="w-[25px] bg-red-400 text-zinc-950 rounded-lg border-zinc-800 border mx-[2px] text-center text-[18px]">!</div></Link>
                         </div>
                     </div>
                     <div className="mt-[10px]">
@@ -167,6 +223,21 @@ const Karshenas1 = () => {
                             ثبت و ادامه
                         </div>
                     </Link>
+                </div>
+            </div>
+            <div className={searchcar+" "+"absolute flex-col border border-zinc-900 rounded-2xl z-50 w-[80%] bg-white"}>
+                <div className="w-full flex justify-between p-6 border-b-zinc-500 bg-zinc-100">
+                    <input value={searchValue} className="w-[60%] border border-zinc-900 rounded-2xl p-[10px]" onChange={searchHandler} placeholder="نام خودرو را وارد کنید"/>
+                    <div onClick={closeSearchBox} className="w-[20px] h-[20px] cursor-pointer">X</div>
+                </div>
+                <div className={searchresBox + " " + "flex-wrap"}>
+                    {finalCarName.map((value , index)=>{
+                        return (
+                            <div key={index} className="border border-zinc-900 p-5 bg-green-50 rounded-2xl cursor-pointer m-[10px]" onClick={carselect}>
+                                {value}
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
         </div>
